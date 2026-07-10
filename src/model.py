@@ -31,7 +31,7 @@ from xgboost import XGBRegressor
 
 from src.config import (
     TARGET_COL, DATE_COL, TEST_SIZE,
-    RANDOM_STATE, XGB_PARAMS, MODEL_DIR,
+    RANDOM_STATE, XGB_PARAMS, MODEL_DIR, REPORT_DIR,
 )
 
 warnings.filterwarnings("ignore")
@@ -176,10 +176,10 @@ class PricingModel:
         ax.set_title(f"Top {top_n} Features — Dynamic Pricing Engine")
         ax.grid(axis="x", alpha=0.3)
         plt.tight_layout()
-        plt.savefig("reports/feature_importance.png", dpi=150, bbox_inches="tight")
+        save_path = os.path.join(REPORT_DIR, "feature_importance.png")
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
         plt.show()
-        print("[model] Plot saved → reports/feature_importance.png")
-
+        print(f"[model] Plot saved → {save_path}")
     # ── Predict ───────────────────────────────────────────────────────────────
 
     def predict(self, X: np.ndarray) -> np.ndarray:

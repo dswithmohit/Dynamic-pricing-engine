@@ -29,12 +29,12 @@ import pandas as pd
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import r2_score
 
+import os
 from src.config import (
     TARGET_COL, DEMAND_COL,
     ELASTICITY_SEGMENTS, MIN_SEGMENT_ROWS,
-    RANDOM_STATE,
+    RANDOM_STATE, REPORT_DIR,
 )
-
 
 class ElasticityModel:
     """
@@ -179,6 +179,7 @@ class ElasticityModel:
 
         plt.suptitle("Price Elasticity Curves by Segment", fontsize=13, y=1.02)
         plt.tight_layout()
-        plt.savefig("reports/elasticity_curves.png", dpi=150, bbox_inches="tight")
+        save_path = os.path.join(REPORT_DIR, "elasticity_curves.png")
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
         plt.show()
-        print("[elasticity] Plot saved → reports/elasticity_curves.png")
+        print(f"[elasticity] Plot saved → {save_path}")

@@ -28,8 +28,8 @@ TARGET_COL      = "unit_price"          # what XGBoost predicts
 DEMAND_COL      = "units_sold"          # what elasticity model uses
 
 # ── Feature sets ───────────────────────────────────────────────────────────
-CATEGORICAL_COLS = ["product_category", "brand", "region"]
-DROP_COLS        = ["product_id", "date", "sale_id"]   # identifiers, not features
+CATEGORICAL_COLS = ["product_category", "brand", "region", "channel", "season", "promotion_type"]
+DROP_COLS = ["product_id", "sale_id"]   # identifiers, not features (date is dropped later, at model stage — see model.py's exclude list)
 
 ENGINEERED_FEATURES = [
     "competitor_price_ratio",

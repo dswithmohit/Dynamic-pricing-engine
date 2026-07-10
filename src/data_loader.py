@@ -50,6 +50,21 @@ def download_kaggle_dataset() -> None:
     subprocess.run(cmd, check=True)
     print("[data_loader] Download complete.")
 
+    # Kaggle keeps the original filename from the dataset, which almost
+    # never matches RAW_CSV ("retail_pricing.csv"). Find whatever CSV(s)
+    # got extracted and rename the first one to the expected name.
+    if not os.path.exists(RAW_CSV):
+        candidates = [f for f in os.listdir(raw_dir) if f.lower().endswith(".csv")]
+        if candidates:
+            extracted_path = os.path.join(raw_dir, candidates[0])
+            os.rename(extracted_path, RAW_CSV)
+            print(f"[data_loader] Renamed '{candidates[0]}' → '{os.path.basename(RAW_CSV)}'")
+        else:
+            print(
+                f"[data_loader] Warning: download reported complete but no CSV "
+                f"found in {raw_dir}. Check the zip contents manually."
+            )
+
 
 # ── Raw load ───────────────────────────────────────────────────────────────
 
@@ -61,7 +76,59 @@ def load_raw(path: str = RAW_CSV) -> pd.DataFrame:
             "Run download_kaggle_dataset() first, or place the CSV manually."
         )
     df = pd.read_csv(path, parse_dates=["date"] if "date" in pd.read_csv(path, nrows=0).columns else [])
+
+    # The real Kaggle CSV uses different column names than the rest of the
+    # pipeline expects. Normalize them here so config.py / features.py /
+    # elasticity.py / model.py don't need to change at all.
+    rename_map = {
+        "category": "product_category",   # segment column used everywhere
+        "current_price": "unit_price",    # actual price charged -> what the model predicts
+    }
+    rename_map = {k: v for k, v in rename_map.items() if k in df.columns}
+    if rename_map:
+        df = df.rename(columns=rename_map)
+        print(f"[data_loader] Renamed columns: {rename_map}")
+
     print(f"[data_loader] Loaded raw data — {df.shape[0]:,} rows × {df.shape[1]} cols")
+    return df
+
+# ── Synthetic seed (fallback when Kaggle data isn't available) ─────────────
+
+def _make_seed_df(n: int = 2_000, random_state: int = RANDOM_STATE) -> pd.DataFrame:
+    """
+    Generate a small synthetic 'seed' dataset when the Kaggle raw CSV can't
+    be found (e.g. no kaggle.json configured, or offline). This gets
+    bootstrapped up to 500K rows by build_synthetic_dataset(), so it only
+    needs to be plausible — not exact — and needs the minimum columns that
+    downstream code (features.py, model.py) expects: date, product_category,
+    unit_price, units_sold. Everything else (brand, region, competitor_price,
+    product_id) is filled in later by features._ensure_columns().
+    """
+    rng = np.random.default_rng(random_state)
+
+    categories = ["Electronics", "Apparel", "Home", "Grocery", "Beauty", "Sports"]
+    base_price = {
+        "Electronics": 250, "Apparel": 60, "Home": 90,
+        "Grocery": 20, "Beauty": 35, "Sports": 70,
+    }
+
+    product_category = rng.choice(categories, size=n)
+    price_multiplier = rng.uniform(0.7, 1.3, size=n)
+    unit_price = np.array([base_price[c] for c in product_category]) * price_multiplier
+
+    # Demand roughly anti-correlated with price, plus noise — gives the
+    # elasticity model something non-trivial to fit even on seed data.
+    demand_base = rng.poisson(lam=100, size=n).astype(float)
+    units_sold = demand_base * (1.0 / price_multiplier) * rng.uniform(0.8, 1.2, size=n)
+
+    df = pd.DataFrame({
+        "date":             pd.date_range("2021-01-01", periods=n, freq="D"),
+        "product_category": product_category,
+        "unit_price":       unit_price.round(2),
+        "units_sold":       units_sold.round(0).clip(min=1),
+    })
+
+    print(f"[data_loader] Generated synthetic seed dataset — {df.shape[0]:,} rows")
     return df
 
 

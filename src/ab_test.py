@@ -25,9 +25,10 @@ import numpy as np
 import pandas as pd
 from typing import Tuple
 
+import os
 from src.config import (
     TARGET_COL, DEMAND_COL, AB_TEST_PERIODS,
-    AB_SEED, ELASTICITY_SEGMENTS,
+    AB_SEED, ELASTICITY_SEGMENTS, REPORT_DIR,
 )
 
 
@@ -206,6 +207,7 @@ class ABTestSimulator:
         ax.legend()
         ax.grid(alpha=0.3)
         plt.tight_layout()
-        plt.savefig("reports/ab_test_revenue.png", dpi=150, bbox_inches="tight")
+        save_path = os.path.join(REPORT_DIR, "ab_test_revenue.png")
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
         plt.show()
-        print("[ab_test] Plot saved → reports/ab_test_revenue.png")
+        print(f"[ab_test] Plot saved → {save_path}")
