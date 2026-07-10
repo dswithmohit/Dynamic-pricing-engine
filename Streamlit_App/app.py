@@ -38,6 +38,9 @@ def load_models():
 def load_data():
     if os.path.exists(PROCESSED_CSV):
         return pd.read_csv(PROCESSED_CSV)
+    sample_path = os.path.join(os.path.dirname(PROCESSED_CSV), "features_sample.csv")
+    if os.path.exists(sample_path):
+        return pd.read_csv(sample_path)
     return None
 
 # ── Sidebar ────────────────────────────────────────────────────────────────

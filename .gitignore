@@ -1,0 +1,37 @@
+# Data
+data/raw/
+data/processed/*
+!data/processed/features_sample.csv
+
+# Models
+models/*
+!models/elasticity_model.joblib
+!models/xgb_pricing.joblib
+*.json.model
+
+# Kaggle credentials (never commit this)
+kaggle.json
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+*.egg-info/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Streamlit
+.streamlit/secrets.toml
