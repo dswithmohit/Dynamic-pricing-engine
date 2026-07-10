@@ -188,14 +188,15 @@ elif page == "📉 Elasticity Explorer":
         st.stop()
 
     edf = em.elasticity_df.copy()
-    edf["segment"] = edf["segment"].astype(str)
+    edf_display = edf.copy()
+    edf_display["segment"] = edf_display["segment"].astype(str)  # for chart labels only
 
     col1, col2 = st.columns(2)
 
     with col1:
         st.subheader("Elasticity by Segment")
         fig = px.bar(
-            edf.sort_values("elasticity"),
+            edf_display.sort_values("elasticity"),
             x="elasticity", y="segment", orientation="h",
             color="elasticity",
             color_continuous_scale="RdBu",
